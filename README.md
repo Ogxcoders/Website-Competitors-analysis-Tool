@@ -1,6 +1,6 @@
 # Sitemap Comparison Analyzer  
 
-![Tool Screenshot](https://via.placeholder.com/800x500.png?text=Sitemap+Comparison+Tool)  
+![Tool Screenshot](https://raw.githubusercontent.com/Ogxcoders/Website-Competitors-analysis-Tool/refs/heads/main/Screenshort.jpg)  
 
 **Compare multiple sitemaps to identify content gaps and opportunities**  
 
@@ -91,6 +91,6 @@ Potential Opportunities Identified: 192
 - Any category-specific sitemaps  
 - News/blog sitemaps if available  
 
-[![Try Now Button](https://via.placeholder.com/200x50.png?text=Analyze+Sitemaps+Now)]()  
+[![Try Now Button](https://raw.githubusercontent.com/Ogxcoders/Website-Competitors-analysis-Tool/refs/heads/main/Screenshort.jpg)]()  
 
 *No installation required - 100% browser-based tool*
