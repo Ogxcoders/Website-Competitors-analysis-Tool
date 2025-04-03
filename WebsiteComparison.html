@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sitemap & Post Comparison Tool</title>
+  <style>
+    :root {
+      --main-color: #e61355;
+      --secondary-color: #ff7aa3;
+      --background-color: #fff5f8;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: var(--background-color);
+    }
+    .section {
+      border: 2px solid var(--main-color);
+      border-radius: 8px;
+      margin: 20px 0;
+      padding: 20px;
+      background: white;
+      position: relative;
+    }
+    .section-header {
+      color: var(--main-color);
+      margin: 0 0 20px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--secondary-color);
+    }
+    .input-main-container {
+      display: flex;
+      gap: 20px;
+      padding-bottom: 15px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      padding-right: 160px;
+    }
+    .website-box {
+      min-width: 300px;
+      border: 1px solid var(--secondary-color);
+      border-radius: 8px;
+      padding: 15px;
+      background: var(--background-color);
+      max-height: 400px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .website-header {
+      color: var(--main-color);
+      margin-bottom: 15px;
+    }
+    .urls-container {
+      overflow-y: auto;
+      flex-grow: 1;
+      margin-bottom: 10px;
+    }
+    .url-input-container {
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .url-input {
+      width: 100%;
+      padding: 8px 25px 8px 8px;
+      border: 1px solid var(--secondary-color);
+      border-radius: 4px;
+    }
+    .remove-url-btn {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--main-color);
+      cursor: pointer;
+      font-weight: bold;
+      padding: 0 5px;
+    }
+    .add-more-btn {
+      background: var(--main-color);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: auto;
+    }
+    #competitorsContainer {
+      display: flex;
+      gap: 20px;
+    }
+    .add-comp-btn-container {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 2;
+    }
+    .add-comp-btn {
+      background: var(--main-color);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .add-comp-btn:hover {
+      transform: scale(1.05);
+    }
+    .close-comp-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: none;
+      border: none;
+      color: var(--main-color);
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.2em;
+      padding: 2px 8px;
+    }
+    .loading {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--main-color);
+      color: white;
+      padding: 20px 40px;
+      border-radius: 8px;
+      z-index: 1000;
+    }
+    .results-container {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 15px;
+    }
+    .result-box {
+      min-width: 300px;
+      border: 1px solid var(--secondary-color);
+      border-radius: 8px;
+      padding: 15px;
+      background: var(--background-color);
+      max-height: 600px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .post-list {
+      overflow-y: auto;
+      flex-grow: 1;
+      padding-right: 10px;
+    }
+    .post-item {
+      margin: 10px 0;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      background: white;
+      border-radius: 4px;
+    }
+    .post-title {
+      font-weight: bold;
+      color: var(--main-color);
+      margin-bottom: 5px;
+    }
+    .post-meta {
+      font-size: 0.8em;
+      color: #888;
+    }
+    .error-message {
+      color: red;
+      margin-top: 5px;
+      font-size: 0.9em;
+    }
+    .status-indicator {
+      font-size: 0.8em;
+      margin-top: 5px;
+      color: #666;
+    }
+    .proxy-selector {
+      margin: 15px 0;
+      padding: 10px;
+      border: 1px solid var(--secondary-color);
+      border-radius: 4px;
+      background: var(--background-color);
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--secondary-color);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--background-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="section">
+    <h2 class="section-header">1. Sitemap / Domain Input</h2>
+    <div class="input-main-container">
+      <div class="website-box">
+        <h3 class="website-header">My Website</h3>
+        <div class="urls-container" id="myWebsiteUrls">
+          <div class="url-input-container">
+            <input type="text" class="url-input" placeholder="https://mywebsite.com/sitemap.xml">
+            <button class="remove-url-btn" onclick="removeUrlInput(this)" disabled>×</button>
+          </div>
+        </div>
+        <button class="add-more-btn" onclick="addMoreUrl(this)">+ Add More</button>
+      </div>
+      <div id="competitorsContainer"></div>
+    </div>
+    <div class="add-comp-btn-container">
+      <button class="add-comp-btn" onclick="addNewCompetitor()">+ Add Competitor</button>
+    </div>
+    <div class="proxy-selector">
+      <label for="proxySelector">Select Proxy:</label>
+      <select id="proxySelector">
+        <option value="none">No Proxy</option>
+        <option value="cors-anywhere">CORS Anywhere</option>
+        <option value="allorigins">AllOrigins</option>
+        <option value="thingproxy">ThingProxy</option>
+        <option value="yourproxy">Your Custom Proxy</option>
+      </select>
+      <input type="text" id="customProxyUrl" placeholder="https://yourproxy.com/?url=" style="display: none; width: 100%; margin-top: 5px;">
+    </div>
+    <button class="add-comp-btn" onclick="processSitemaps()" style="width: 100%; margin-top: 15px;">Analyze Posts</button>
+    <div class="status-indicator" id="statusIndicator"></div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-header">2. All Posts Analysis</h2>
+    <div id="allPosts" class="results-container"></div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-header">3. Missing Posts Analysis</h2>
+    <div id="missingPosts" class="results-container"></div>
+  </div>
+
+  <div class="loading" id="loading">Analyzing Posts...</div>
+
+  <script>
+    // Global variables
+    let isProcessing = false;
+    
+    // Proxy configuration
+    const PROXIES = {
+      'none': url => url,
+      'cors-anywhere': url => `https://cors-anywhere.herokuapp.com/${url}`,
+      'allorigins': url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      'thingproxy': url => `https://thingproxy.freeboard.io/fetch/${url}`,
+      'yourproxy': url => document.getElementById('customProxyUrl').value + encodeURIComponent(url)
+    };
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadFromCookies();
+      
+      // Setup proxy selector
+      document.getElementById('proxySelector').addEventListener('change', function() {
+        const customProxyInput = document.getElementById('customProxyUrl');
+        customProxyInput.style.display = this.value === 'yourproxy' ? 'block' : 'none';
+      });
+      
+      // Auto-process if URL has parameter ?autoprocess=true
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('autoprocess') === 'true') {
+        processSitemaps();
+      }
+    });
+
+    /* ---------- URL Input and Cookie Functions ---------- */
+    function addMoreUrl(button) {
+      const container = button.previousElementSibling;
+      const newContainer = document.createElement('div');
+      newContainer.className = 'url-input-container';
+      newContainer.innerHTML = `
+        <input type="text" class="url-input" placeholder="https://website.com/sitemap.xml">
+        <button class="remove-url-btn" onclick="removeUrlInput(this)">×</button>
+      `;
+      container.appendChild(newContainer);
+      saveToCookies();
+    }
+
+    function removeUrlInput(button) {
+      const inputs = button.closest('.urls-container').querySelectorAll('.url-input-container');
+      if (inputs.length > 1) {
+        button.closest('.url-input-container').remove();
+        saveToCookies();
+      }
+    }
+
+    function addNewCompetitor() {
+      const container = document.getElementById('competitorsContainer');
+      const competitorNumber = container.children.length + 1;
+      
+      const newBox = document.createElement('div');
+      newBox.className = 'website-box';
+      newBox.innerHTML = `
+        <button class="close-comp-btn" onclick="removeCompetitor(this)">×</button>
+        <h3 class="website-header">Competitor ${competitorNumber}</h3>
+        <div class="urls-container">
+          <div class="url-input-container">
+            <input type="text" class="url-input" placeholder="https://competitor${competitorNumber}.com/sitemap.xml">
+            <button class="remove-url-btn" onclick="removeUrlInput(this)">×</button>
+          </div>
+        </div>
+        <button class="add-more-btn" onclick="addMoreUrl(this)">+ Add More</button>
+      `;
+      container.appendChild(newBox);
+      saveToCookies();
+      document.querySelector('.input-main-container').scrollTo({
+        left: document.querySelector('.input-main-container').scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+
+    function removeCompetitor(button) {
+      const competitorBox = button.closest('.website-box');
+      if (competitorBox) {
+        competitorBox.remove();
+        saveToCookies();
+        document.querySelectorAll('#competitorsContainer .website-header').forEach((header, index) => {
+          header.textContent = `Competitor ${index + 1}`;
+        });
+      }
+    }
+
+    function saveToCookies() {
+      const data = {
+        myUrls: Array.from(document.querySelectorAll('#myWebsiteUrls .url-input')).map(i => i.value.trim()),
+        competitors: Array.from(document.querySelectorAll('#competitorsContainer .website-box')).map(box => ({
+          urls: Array.from(box.querySelectorAll('.url-input')).map(i => i.value.trim())
+        }))
+      };
+      document.cookie = `sitemapData=${JSON.stringify(data)}; expires=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}; path=/`;
+    }
+
+    function loadFromCookies() {
+      try {
+        const cookie = document.cookie.split('; ').find(row => row.startsWith('sitemapData='));
+        if (cookie) {
+          const data = JSON.parse(cookie.split('=')[1]);
+          if (data.myUrls?.length) {
+            const container = document.querySelector('#myWebsiteUrls');
+            container.innerHTML = '';
+            data.myUrls.forEach((url, index) => {
+              const newContainer = document.createElement('div');
+              newContainer.className = 'url-input-container';
+              newContainer.innerHTML = `
+                <input type="text" class="url-input" value="${url}">
+                <button class="remove-url-btn" onclick="removeUrlInput(this)" ${index === 0 ? 'disabled' : ''}>×</button>
+              `;
+              container.appendChild(newContainer);
+            });
+          }
+          if (data.competitors?.length) {
+            data.competitors.forEach(competitor => {
+              if (competitor.urls?.length) {
+                addNewCompetitor();
+                const lastBox = document.querySelector('#competitorsContainer .website-box:last-child');
+                lastBox.querySelector('.urls-container').innerHTML = '';
+                competitor.urls.forEach((url, index) => {
+                  const newContainer = document.createElement('div');
+                  newContainer.className = 'url-input-container';
+                  newContainer.innerHTML = `
+                    <input type="text" class="url-input" value="${url}">
+                    <button class="remove-url-btn" onclick="removeUrlInput(this)">×</button>
+                  `;
+                  lastBox.querySelector('.urls-container').appendChild(newContainer);
+                });
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Error loading cookies:', e);
+        document.cookie = 'sitemapData=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      }
+    }
+
+    /* ---------- Sitemap and Post Fetching Functions ---------- */
+    function getProxyUrl(url) {
+      const proxyType = document.getElementById('proxySelector').value;
+      return PROXIES[proxyType](url);
+    }
+
+    async function fetchWithRetry(url, options = {}, retries = 3) {
+      const proxyUrl = getProxyUrl(url);
+      try {
+        const response = await fetch(proxyUrl, options);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        // Handle proxy responses that wrap the content
+        if (proxyUrl.includes('allorigins.win')) {
+          const data = await response.json();
+          return data.contents;
+        }
+        
+        return await response.text();
+      } catch (error) {
+        if (retries > 0) {
+          console.log(`Retrying ${url} (${retries} retries left)`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return fetchWithRetry(url, options, retries - 1);
+        }
+        throw error;
+      }
+    }
+
+    async function fetchSitemap(url) {
+      updateStatus(`Fetching sitemap: ${url}`);
+      try {
+        const text = await fetchWithRetry(url);
+        return parseSitemap(text, url);
+      } catch (error) {
+        console.error(`Error fetching ${url}:`, error);
+        updateStatus(`Failed to fetch ${url}: ${error.message}`, true);
+        return [];
+      }
+    }
+
+    function parseSitemap(xmlText, sourceUrl) {
+      try {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+        
+        // Check for sitemapindex first
+        const sitemaps = xmlDoc.getElementsByTagName('sitemap');
+        if (sitemaps.length > 0) {
+          const sitemapUrls = Array.from(sitemaps).map(sitemap => 
+            sitemap.getElementsByTagName('loc')[0]?.textContent
+          ).filter(Boolean);
+          
+          if (sitemapUrls.length > 0) {
+            updateStatus(`Found sitemap index at ${sourceUrl} with ${sitemapUrls.length} sub-sitemaps`);
+            return [];
+          }
+        }
+        
+        // Process regular sitemap
+        const urls = xmlDoc.getElementsByTagName('url');
+        const parsedUrls = Array.from(urls).map(url => {
+          const loc = url.getElementsByTagName('loc')[0]?.textContent || '';
+          const lastmod = url.getElementsByTagName('lastmod')[0]?.textContent || 'Unknown';
+          return {
+            loc,
+            title: extractTitle(loc),
+            lastmod: lastmod !== 'Unknown' ? new Date(lastmod).toLocaleString() : 'Unknown',
+            fetched: new Date().toLocaleString(),
+            source: 'Sitemap'
+          };
+        });
+        
+        updateStatus(`Parsed ${parsedUrls.length} URLs from ${sourceUrl}`);
+        return parsedUrls;
+      } catch (error) {
+        console.error('Error parsing sitemap:', error);
+        updateStatus(`Failed to parse sitemap from ${sourceUrl}: ${error.message}`, true);
+        return [];
+      }
+    }
+
+    function extractTitle(url) {
+      try {
+        const path = new URL(url).pathname;
+        return path.split('/').filter(p => p).pop()?.split(/[-_]/).map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ') || 'Homepage';
+      } catch {
+        return 'Untitled';
+      }
+    }
+
+    function parseRSS(xmlText, sourceUrl) {
+      try {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+        let items = xmlDoc.getElementsByTagName('item');
+        if (items.length === 0) {
+          items = xmlDoc.getElementsByTagName('entry');
+        }
+        
+        const parsedItems = Array.from(items).map(item => {
+          let title = item.getElementsByTagName('title')[0]?.textContent || 'Untitled';
+          let locElement = item.getElementsByTagName('link')[0];
+          let loc = '';
+          
+          if (locElement) {
+            loc = locElement.getAttribute('href') || locElement.textContent;
+            if (!loc && locElement.getAttribute('href')) {
+              loc = locElement.getAttribute('href');
+            }
+          }
+          
+          let lastmod = item.getElementsByTagName('pubDate')[0]?.textContent || 
+                       item.getElementsByTagName('updated')[0]?.textContent || 'Unknown';
+          return {
+            loc,
+            title,
+            lastmod: lastmod !== 'Unknown' ? new Date(lastmod).toLocaleString() : 'Unknown',
+            fetched: new Date().toLocaleString(),
+            source: 'RSS Feed'
+          };
+        }).filter(item => item.loc); // Filter out items without URLs
+        
+        updateStatus(`Parsed ${parsedItems.length} items from RSS feed at ${sourceUrl}`);
+        return parsedItems;
+      } catch (error) {
+        console.error('Error parsing RSS feed:', error);
+        updateStatus(`Failed to parse RSS feed from ${sourceUrl}: ${error.message}`, true);
+        return [];
+      }
+    }
+
+    async function detectWordPress(baseUrl) {
+      updateStatus(`Checking for WordPress at ${baseUrl}`);
+      try {
+        const response = await fetchWithRetry(`${baseUrl}/wp-json`);
+        const data = await response.json();
+        if (data.routes && data.routes['/wp/v2/posts']) {
+          updateStatus(`WordPress detected at ${baseUrl}`);
+          return true;
+        }
+        return false;
+      } catch (error) {
+        updateStatus(`WordPress not detected at ${baseUrl}: ${error.message}`);
+        return false;
+      }
+    }
+
+    async function getWordPressPosts(baseUrl) {
+      updateStatus(`Fetching WordPress posts from ${baseUrl}`);
+      let page = 1;
+      const perPage = 100;
+      let allPosts = [];
+      
+      while (true) {
+        const url = `${baseUrl}/wp-json/wp/v2/posts?per_page=${perPage}&page=${page}`;
+        try {
+          const response = await fetchWithRetry(url);
+          const posts = await response.json();
+          if (!posts.length) break;
+          
+          allPosts = allPosts.concat(posts.map(post => ({
+            loc: post.link,
+            title: post.title.rendered,
+            lastmod: post.modified_gmt ? new Date(post.modified_gmt).toLocaleString() : 'Unknown',
+            fetched: new Date().toLocaleString(),
+            source: 'WordPress API'
+          })));
+          
+          if (posts.length < perPage) break;
+          page++;
+        } catch (e) {
+          console.error("Error fetching WordPress posts on page " + page, e);
+          updateStatus(`Error fetching WordPress posts on page ${page}: ${e.message}`, true);
+          break;
+        }
+      }
+      
+      updateStatus(`Fetched ${allPosts.length} WordPress posts from ${baseUrl}`);
+      return allPosts;
+    }
+
+    async function detectCustomPosts(baseUrl) {
+      updateStatus(`Checking for custom posts at ${baseUrl}`);
+      const strategies = [
+        { url: `${baseUrl}/api/posts`, key: 'posts' },
+        { url: `${baseUrl}/api/v1/posts`, key: 'posts' },
+        { url: `${baseUrl}/api/articles`, key: 'articles' },
+        { url: `${baseUrl}/feed.xml`, type: 'rss' },
+        { url: `${baseUrl}/rss.xml`, type: 'rss' },
+        { url: `${baseUrl}/atom.xml`, type: 'rss' },
+        { url: `${baseUrl}/feed`, type: 'rss' }
+      ];
+      
+      for (const strategy of strategies) {
+        try {
+          const response = await fetchWithRetry(strategy.url);
+          const text = await response.text();
+          
+          if (strategy.type === 'rss') {
+            const posts = parseRSS(text, strategy.url);
+            if (posts.length > 0) {
+              updateStatus(`Found ${posts.length} posts in RSS feed at ${strategy.url}`);
+              return posts;
+            }
+          } else {
+            try {
+              const data = JSON.parse(text);
+              if (strategy.key && data[strategy.key]) {
+                const posts = data[strategy.key].map(post => ({
+                  loc: post.url || post.link || '',
+                  title: post.title || 'Untitled',
+                  lastmod: post.lastmod || post.modified || 'Unknown',
+                  fetched: new Date().toLocaleString(),
+                  source: 'Custom API'
+                })).filter(post => post.loc);
+                
+                updateStatus(`Found ${posts.length} posts in custom API at ${strategy.url}`);
+                return posts;
+              }
+            } catch (jsonError) {
+              continue;
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+      
+      updateStatus(`No custom posts found at ${baseUrl}`);
+      return [];
+    }
+
+    async function discoverSitemapUrls(baseUrl) {
+      updateStatus(`Discovering sitemap URLs for ${baseUrl}`);
+      const commonSitemaps = [
+        `${baseUrl}/sitemap.xml`,
+        `${baseUrl}/sitemap_index.xml`,
+        `${baseUrl}/post-sitemap.xml`,
+        `${baseUrl}/page-sitemap.xml`,
+        `${baseUrl}/sitemap1.xml`,
+        `${baseUrl}/sitemap-news.xml`,
+        `${baseUrl}/sitemap-pt-post.xml`
+      ];
+      
+      const results = [];
+      
+      for (const sitemapUrl of commonSitemaps) {
+        try {
+          const text = await fetchWithRetry(sitemapUrl);
+          const posts = parseSitemap(text, sitemapUrl);
+          if (posts.length > 0) {
+            results.push(...posts);
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+      
+      if (results.length > 0) {
+        updateStatus(`Discovered ${results.length} posts from sitemaps at ${baseUrl}`);
+      } else {
+        updateStatus(`No sitemaps found at ${baseUrl}`, true);
+      }
+      
+      return results;
+    }
+
+    async function processUrl(url) {
+      if (!url) return [];
+      
+      try {
+        updateStatus(`Processing URL: ${url}`);
+        
+        // If it's a direct sitemap URL
+        if (url.match(/sitemap.*\.xml$/i)) {
+          const sitemapPosts = await fetchSitemap(url);
+          if (sitemapPosts.length > 0) {
+            return sitemapPosts;
+          }
+        }
+        
+        // Process as a domain/base URL
+        let baseUrl;
+        try {
+          const parsedUrl = new URL(url);
+          baseUrl = parsedUrl.origin;
+          if (parsedUrl.pathname !== "/" && !parsedUrl.pathname.match(/\.xml$/i)) {
+            baseUrl += parsedUrl.pathname.replace(/\/$/, '');
+          }
+        } catch (e) {
+          console.error(`Invalid URL: ${url}`);
+          updateStatus(`Invalid URL: ${url}`, true);
+          return [];
+        }
+        
+        // Try WordPress API first
+        if (await detectWordPress(baseUrl)) {
+          const wpPosts = await getWordPressPosts(baseUrl);
+          if (wpPosts.length > 0) {
+            return wpPosts;
+          }
+        }
+        
+        // Try custom APIs and RSS feeds
+        const customPosts = await detectCustomPosts(baseUrl);
+        if (customPosts.length > 0) {
+          return customPosts;
+        }
+        
+        // Try to discover sitemaps
+        const discoveredPosts = await discoverSitemapUrls(baseUrl);
+        if (discoveredPosts.length > 0) {
+          return discoveredPosts;
+        }
+        
+        return [];
+      } catch (error) {
+        console.error(`Error processing URL ${url}:`, error);
+        updateStatus(`Error processing URL ${url}: ${error.message}`, true);
+        return [];
+      }
+    }
+
+    function updateStatus(message, isError = false) {
+      const statusElement = document.getElementById('statusIndicator');
+      if (statusElement) {
+        statusElement.textContent = message;
+        statusElement.style.color = isError ? 'red' : '#666';
+        console.log(message);
+      }
+    }
+
+    function processSitemaps() {
+      if (isProcessing) return;
+      isProcessing = true;
+      
+      const loading = document.getElementById('loading');
+      loading.style.display = 'block';
+      
+      // Clear previous results
+      document.getElementById('allPosts').innerHTML = '';
+      document.getElementById('missingPosts').innerHTML = '';
+      updateStatus('Starting analysis...');
+      
+      const myUrls = Array.from(document.querySelectorAll('#myWebsiteUrls .url-input'))
+        .map(i => i.value.trim())
+        .filter(url => url);
+      
+      if (myUrls.length === 0) {
+        updateStatus('Please enter at least one URL for your website', true);
+        isProcessing = false;
+        loading.style.display = 'none';
+        return;
+      }
+      
+      const competitorBoxes = Array.from(document.querySelectorAll('#competitorsContainer .website-box'));
+      const competitorData = competitorBoxes.map(box => ({
+        label: box.querySelector('.website-header').textContent,
+        urls: Array.from(box.querySelectorAll('.url-input')).map(i => i.value.trim()).filter(url => url)
+      }));
+      
+      // Process all URLs
+      updateStatus('Processing your website URLs...');
+      Promise.all(
+        myUrls.map(url => processUrl(url).catch(e => {
+          console.error(`Error processing my website URL ${url}:`, e);
+          updateStatus(`Error processing your website URL ${url}: ${e.message}`, true);
+          return [];
+        }))
+      ).then(myPostsArrays => {
+        const myPosts = myPostsArrays.flat();
+        updateStatus(`Found ${myPosts.length} posts from your website`);
+        
+        // Process competitor URLs
+        updateStatus('Processing competitor URLs...');
+        return Promise.all(
+          competitorData.map(async (competitor, index) => {
+            updateStatus(`Processing ${competitor.label || `Competitor ${index + 1}`}...`);
+            const postsArrays = await Promise.all(
+              competitor.urls.map(url => processUrl(url).catch(e => {
+                console.error(`Error processing competitor URL ${url}:`, e);
+                updateStatus(`Error processing competitor URL ${url}: ${e.message}`, true);
+                return [];
+              }))
+            );
+            const posts = postsArrays.flat();
+            updateStatus(`Found ${posts.length} posts from ${competitor.label || `Competitor ${index + 1}`}`);
+            return posts;
+          })
+        ).then(competitorPosts => {
+          // Display results
+          updateStatus('Generating reports...');
+          displayResults(myPosts, competitorPosts, competitorData);
+          saveToCookies();
+          
+          updateStatus('Analysis completed successfully!');
+        });
+      }).catch(error => {
+        console.error('Processing error:', error);
+        updateStatus(`Processing error: ${error.message}`, true);
+        alert('An error occurred while processing. Please check the status messages for details.');
+      }).finally(() => {
+        loading.style.display = 'none';
+        isProcessing = false;
+      });
+    }
+
+    function createResultBox(title, posts, count) {
+      return `
+        <div class="result-box">
+          <h3 class="website-header">${title} (${count})</h3>
+          ${posts.length > 0 ? `
+            <div class="post-list">
+              ${posts.slice(0, 100).map(post => `
+                <div class="post-item">
+                  <div class="post-title">${post.title}</div>
+                  <div class="post-meta">
+                    🔗 <a href="${post.loc}" target="_blank">${post.loc}</a><br>
+                    📅 ${post.lastmod || 'Unknown'}<br>
+                    ⏰ ${post.fetched}<br>
+                    📌 Source: ${post.source || 'Sitemap'}
+                  </div>
+                </div>
+              `).join('')}
+              ${posts.length > 100 ? `<div class="post-item">+ ${posts.length - 100} more posts...</div>` : ''}
+            </div>
+          ` : '<div class="post-item">No posts found</div>'}
+        </div>
+      `;
+    }
+
+    function displayResults(myPosts, competitorPosts, competitorData) {
+      const allPostsContainer = document.getElementById('allPosts');
+      allPostsContainer.innerHTML = '';
+      allPostsContainer.innerHTML += createResultBox('My Website', myPosts, myPosts.length);
+      
+      competitorData.forEach((competitor, index) => {
+        const posts = competitorPosts[index] || [];
+        allPostsContainer.innerHTML += createResultBox(
+          competitor.label || `Competitor ${index + 1}`, 
+          posts, 
+          posts.length
+        );
+      });
+      
+      const missingPostsContainer = document.getElementById('missingPosts');
+      missingPostsContainer.innerHTML = '';
+      
+      // Find posts in competitors that are missing from my website
+      const allCompetitorPosts = competitorPosts.flat();
+      const myMissingInCompetitors = getMissingPosts(allCompetitorPosts, myPosts);
+      missingPostsContainer.innerHTML += createResultBox(
+        'Posts Missing in My Website', 
+        myMissingInCompetitors, 
+        myMissingInCompetitors.length
+      );
+      
+      // Find posts in my website that are missing from each competitor
+      competitorPosts.forEach((compPosts, index) => {
+        const compMissing = getMissingPosts(compPosts, myPosts);
+        missingPostsContainer.innerHTML += createResultBox(
+          `Posts Missing in ${competitorData[index].label || `Competitor ${index + 1}`}`, 
+          compMissing, 
+          compMissing.length
+        );
+      });
+    }
+
+    function getMissingPosts(sourcePosts, targetPosts) {
+      const targetUrls = new Set(targetPosts.map(p => p.loc));
+      return sourcePosts.filter(post => post.loc && !targetUrls.has(post.loc));
+    }
+  </script>
+</body>
+</html>
